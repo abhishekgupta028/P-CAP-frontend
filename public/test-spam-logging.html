@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Spam Logging to NeonDB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        .info {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #444;
+            border-radius: 5px;
+            font-size: 16px;
+            background: #1a1a1a;
+            color: #fff;
+            margin-bottom: 15px;
+            min-height: 100px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #333;
+        }
+        .success {
+            background: #1b5e20;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            background: #b71c1c;
+            border-left: 4px solid #f44336;
+        }
+        .log {
+            background: #000;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 3px;
+        }
+        .log-success { color: #4CAF50; }
+        .log-error { color: #f44336; }
+        .log-info { color: #2196F3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Spam Detection + NeonDB Logging</h1>
+        <p style="color: #888;">This page tests the complete flow: Spam Detection → Database Logging</p>
+        
+        <div class="info">
+            <strong>📌 How this works:</strong><br>
+            1. Enter a message below<br>
+            2. Click "Test Detection + Logging"<br>
+            3. Watch the console logs below<br>
+            4. Verify the message appears in NeonDB
+        </div>
+
+        <textarea id="messageInput" placeholder="Enter a message to test (try: 'WIN FREE MONEY NOW!!!')">WIN FREE MONEY NOW!!! Click here to claim your $10,000 prize!!!</textarea>
+        
+        <button onclick="testSpamDetectionAndLogging()">🚀 Test Detection + Logging</button>
+        <button onclick="checkHistory()">📊 Check DB History</button>
+        <button onclick="clearLogs()">🗑️ Clear Logs</button>
+
+        <div id="result"></div>
+        <div class="log" id="consoleLog"></div>
+    </div>
+
+    <script>
+        const API_GATEWAY = 'http://localhost:5000';
+        const DB_API = 'http://localhost:5003';
+        let logEntries = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.push({ entry, type });
+            updateLogDisplay();
+        }
+
+        function updateLogDisplay() {
+            const logDiv = document.getElementById('consoleLog');
+            logDiv.innerHTML = logEntries.map(({ entry, type }) => 
+                `<div class="log-entry log-${type}">${entry}</div>`
+            ).join('');
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLogs() {
+            logEntries = [];
+            updateLogDisplay();
+            document.getElementById('result').innerHTML = '';
+        }
+
+        async function testSpamDetectionAndLogging() {
+            const message = document.getElementById('messageInput').value.trim();
+            
+            if (!message) {
+                alert('Please enter a message!');
+                return;
+            }
+
+            clearLogs();
+            log('🚀 Starting spam detection + logging test...', 'info');
+            log(`📝 Message: "${message}"`, 'info');
+
+            try {
+                // Step 1: Detect spam
+                log('', 'info');
+                log('STEP 1: Calling spam detection API...', 'info');
+                log(`POST ${API_GATEWAY}/api/spam/detect`, 'info');
+                
+                const detectResponse = await fetch(`${API_GATEWAY}/api/spam/detect`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                if (!detectResponse.ok) {
+                    throw new Error(`Spam API returned ${detectResponse.status}`);
+                }
+
+                const detectData = await detectResponse.json();
+                log('✅ Spam detection successful!', 'success');
+                log(`   Is Spam: ${detectData.data.is_spam}`, 'success');
+                log(`   Confidence: ${(detectData.data.confidence * 100).toFixed(2)}%`, 'success');
+                log(`   Risk Level: ${detectData.data.risk_level}`, 'success');
+
+                // Step 2: Log to database
+                log('', 'info');
+                log('STEP 2: Logging to NeonDB...', 'info');
+                log(`POST ${DB_API}/api/db/spam/log`, 'info');
+
+                const logPayload = {
+                    user_id: 1,
+                    message: message,
+                    is_spam: detectData.data.is_spam,
+                    confidence: detectData.data.confidence,
+                    spam_probability: detectData.data.probabilities.spam,
+                    ham_probability: detectData.data.probabilities.ham,
+                    risk_level: detectData.data.risk_level
+                };
+
+                const logResponse = await fetch(`${DB_API}/api/db/spam/log`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(logPayload)
+                });
+
+                if (!logResponse.ok) {
+                    throw new Error(`DB API returned ${logResponse.status}`);
+                }
+
+                const logData = await logResponse.json();
+                log('✅ SUCCESSFULLY LOGGED TO NEONDB!', 'success');
+                log(`   ${logData.message}`, 'success');
+                log(`   Log ID: ${logData.log_id}`, 'success');
+
+                // Show success result
+                document.getElementById('result').innerHTML = `
+                    <div class="result success">
+                        <h3>✅ Success!</h3>
+                        <p><strong>Detection:</strong> ${detectData.data.is_spam ? 'SPAM' : 'HAM'} (${(detectData.data.confidence * 100).toFixed(2)}% confidence)</p>
+                        <p><strong>Database:</strong> Logged successfully (ID: ${logData.log_id})</p>
+                        <p style="margin-top: 10px; color: #4CAF50;"><strong>✅ Real-time logging is working!</strong></p>
+                    </div>
+                `;
+
+                log('', 'info');
+                log('🎉 TEST COMPLETE - Real-time logging is WORKING!', 'success');
+
+            } catch (error) {
+                log('❌ ERROR occurred:', 'error');
+                log(`   ${error.message}`, 'error');
+                
+                document.getElementById('result').innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Error</h3>
+                        <p>${error.message}</p>
+                        <p style="margin-top: 10px;"><strong>Check:</strong></p>
+                        <ul>
+                            <li>Is the API Gateway running on port 5000?</li>
+                            <li>Is the DB API running on port 5003?</li>
+                            <li>Is the Spam ML API running on port 5002?</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        async function checkHistory() {
+            log('📊 Fetching spam history from NeonDB...', 'info');
+            
+            try {
+                const response = await fetch(`${DB_API}/api/db/spam/history/1?limit=5`);
+                
+                if (!response.ok) {
+                    throw new Error(`DB API returned ${response.status}`);
+                }
+
+                const data = await response.json();
+                log(`✅ Found ${data.count} spam logs in database`, 'success');
+                
+                if (data.history && data.history.length > 0) {
+                    log('', 'info');
+                    log('📝 Latest 5 entries:', 'info');
+                    data.history.forEach((entry, index) => {
+                        const time = new Date(entry.created_at).toLocaleString();
+                        const status = entry.is_spam ? '🚨 SPAM' : '✅ HAM';
+                        log(`   ${index + 1}. ${status} | ${time}`, 'info');
+                        log(`      "${entry.message.substring(0, 50)}..."`, 'info');
+                    });
+                }
+
+                document.getElementById('result').innerHTML = `
+                    <div class="result success">
+                        <h3>📊 Database History</h3>
+                        <p><strong>Total Logs:</strong> ${data.count}</p>
+                        <p><strong>Latest entries shown in console below</strong></p>
+                    </div>
+                `;
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run a quick connectivity check on load
+        window.addEventListener('load', () => {
+            log('🔍 Checking backend connectivity...', 'info');
+            
+            Promise.all([
+                fetch(`${API_GATEWAY}/api/health`).then(() => log('✅ API Gateway (5000) is reachable', 'success')).catch(() => log('❌ API Gateway (5000) NOT reachable', 'error')),
+                fetch(`${DB_API}/api/db/health`).then(() => log('✅ DB API (5003) is reachable', 'success')).catch(() => log('❌ DB API (5003) NOT reachable', 'error'))
+            ]).then(() => {
+                log('', 'info');
+                log('✅ Ready to test! Click the button above.', 'success');
+            });
+        });
+    </script>
+</body>
+</html>
