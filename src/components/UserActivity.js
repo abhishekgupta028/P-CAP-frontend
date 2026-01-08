@@ -21,8 +21,8 @@ const UserActivity = ({ userId = 1 }) => {
       setLoading(true);
       
       const [spamRes, fraudRes] = await Promise.all([
-        axios.get(`http://localhost:5003/api/db/spam/history/${userId}?limit=10`),
-        axios.get(`http://localhost:5003/api/db/fraud/history/${userId}?limit=10`)
+        axios.get(`${process.env.REACT_APP_API_URL}/api/db/spam/history/${userId}?limit=10`),
+        axios.get(`${process.env.REACT_APP_API_URL}/api/db/fraud/history/${userId}?limit=10`)
       ]);
 
       if (spamRes.data.success) {

@@ -26,7 +26,7 @@ const StatsDashboard = () => {
       setLoading(true);
       
       // Fetch overall statistics from database
-      const response = await axios.get('http://localhost:5003/api/db/stats/overall');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/db/stats/overall`);
       
       if (response.data.success) {
         setStats(response.data.stats);

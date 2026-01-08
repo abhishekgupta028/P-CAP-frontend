@@ -30,8 +30,8 @@ function SpamCheck() {
 
     try {
       // Step 1: Get spam detection result
-      console.log('📡 Step 1: Calling API Gateway at http://localhost:5000/api/spam/detect');
-      const response = await axios.post('http://localhost:5000/api/spam/detect', {
+      console.log('📡 Step 1: Calling API Gateway at', `${process.env.REACT_APP_API_URL}/api/spam/detect`);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/spam/detect`, {
         message: message
       });
 
@@ -55,7 +55,7 @@ function SpamCheck() {
               localStorage.setItem('clerk_uid', clerkId);
             }
             
-            const userRes = await axios.post('http://localhost:5003/api/db/user/create', {
+            const userRes = await axios.post(`${process.env.REACT_APP_API_URL}/api/db/user/create`, {
               clerk_user_id: clerkId,
               email: `${clerkId}@local.test`,
               name: 'Local User'
@@ -90,7 +90,7 @@ function SpamCheck() {
           
           console.log('📤 Database Payload:', dbPayload);
           
-          const dbResponse = await axios.post('http://localhost:5003/api/db/spam/log', dbPayload);
+          const dbResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/db/spam/log`, dbPayload);
           console.log('📥 Database Response:', dbResponse.data);
           console.log(`✅ SUCCESS: Spam detection logged to NeonDB (user_id=${uidToUse})`);
           
@@ -124,7 +124,7 @@ function SpamCheck() {
         if (cachedUserId) {
           // Verify this user exists in database
           try {
-            const verifyResponse = await axios.get(`http://localhost:5003/api/db/user/${cachedUserId}`);
+            const verifyResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/db/user/${cachedUserId}`);
             if (verifyResponse.data?.success && verifyResponse.data?.user) {
               console.log(`✅ Verified existing user: id=${cachedUserId}`);
               setUserDbId(parseInt(cachedUserId, 10));
@@ -152,7 +152,7 @@ function SpamCheck() {
 
         // Create user record in DB (idempotent - endpoint returns existing user if present)
         console.log(`📡 Creating user with clerk_id=${clerkId}`);
-        const res = await axios.post('http://localhost:5003/api/db/user/create', {
+        const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/db/user/create`, {
           clerk_user_id: clerkId,
           email: `${clerkId}@local.test`,
           name: 'Local User'

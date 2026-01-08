@@ -54,7 +54,7 @@ function TransactionCheck() {
         
         // Step 2: Log to database
         try {
-          await axios.post('http://localhost:5003/api/db/fraud/log', {
+          await axios.post(`${process.env.REACT_APP_API_URL}/api/db/fraud/log`, {
             user_id: 1, // TODO: Replace with actual Clerk user ID when authenticated
             transaction_amount: formData.Transaction_Amount,
             transaction_type: formData.Transaction_Type,

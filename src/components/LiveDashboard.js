@@ -45,7 +45,7 @@ function LiveDashboard() {
   // Fetch overall statistics
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5003/api/db/stats/overall');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/db/stats/overall`);
       if (response.data.success) {
         const data = response.data.stats;
         setStats({
@@ -88,7 +88,7 @@ function LiveDashboard() {
     try {
       console.log('💳 Fetching fraud logs from /api/db/fraud/all');
       // Fetch from ALL users, not just user 1
-      const response = await axios.get('http://localhost:5003/api/db/fraud/all?limit=10');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/db/fraud/all?limit=10`);
       if (response.data.success) {
         console.log('✅ Received', response.data.count, 'fraud logs');
         setRecentFraud(response.data.history || []);
