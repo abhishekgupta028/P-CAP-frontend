@@ -71,9 +71,9 @@ function LiveDashboard() {
   // Fetch recent spam activity
   const fetchRecentSpam = async () => {
     try {
-      console.log('📧 Fetching spam logs from /api/db/spam/all');
-      // Fetch from ALL users, not just user 1
-      const response = await axios.get('http://localhost:5003/api/db/spam/all?limit=10');
+      console.log('📧 Fetching spam logs from API Gateway');
+      // Fetch from ALL users through the API Gateway
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/db/spam/all?limit=10`);
       if (response.data.success) {
         console.log('✅ Received', response.data.count, 'spam logs');
         setRecentSpam(response.data.history || []);
