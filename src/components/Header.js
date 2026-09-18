@@ -22,6 +22,7 @@ const Header = () => {
 
   const navItems = [
     { path: '/', label: 'Home', icon: '🏠' },
+    { path: '/cyber-ai', label: 'AI Assistant', icon: '🤖' },
     { path: '/dashboard', label: 'Live Dashboard', icon: '📊' },
     { path: '/user-types', label: 'User Profiles', icon: '👥' },
     { path: '/fraud-types', label: 'Fraud Types', icon: '🚨' },

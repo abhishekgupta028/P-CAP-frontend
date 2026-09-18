@@ -11,6 +11,8 @@ import ThreatMap from './components/ThreatMap';
 import TransactionCheck from './components/TransactionCheck';
 import SpamCheck from './components/SpamCheck';
 import LiveDashboard from './components/LiveDashboard';
+import CyberShieldChat from './components/CyberShieldChat';
+import FloatingChatWidget from './components/FloatingChatWidget';
 import Footer from './components/Footer';
 
 function App() {
@@ -209,6 +211,16 @@ function App() {
           } 
         />
         
+        <Route 
+          path="/cyber-ai" 
+          element={
+            <CyberShieldChat 
+              userType={selectedUserType}
+              preferences={userPreferences}
+            />
+          } 
+        />
+        
         {/* Additional Routes */}
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
@@ -217,6 +229,7 @@ function App() {
         <Route path="/system-health" element={<SystemHealth />} />
       </Routes>
       
+      <FloatingChatWidget />
       <Footer />
 
       {/* Global Styles */}
